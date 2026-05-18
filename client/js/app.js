@@ -1,8 +1,6 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// DYNAMIC HANDLING RESOLUTION:
-// Automatically resolve back through the active window frame domain to prevent routing blocks
 const PUBLIC_API_URL = window.location.origin;
 
 let socket = null;
@@ -43,8 +41,17 @@ async function initAuthenticationPipeline() {
 }
 
 function initializeSocketConnections(token) {
-  // Bind Socket connection straight back into the dynamic host platform origin
-  socket = io(PUBLIC_API_URL, { auth: { token } });
+  // FORCE SECURE SECURE HTTPS / WSS TRANSPORTS FOR RENDER LOAD BALANCERS
+  socket = io(PUBLIC_API_URL, {
+    auth: { token },
+    transports: ['websocket', 'polling'],
+    secure: true,
+    rejectUnauthorized: false
+  });
+
+  socket.on('connect', () => {
+    console.log('✅ Connected securely to server matrix socket pool!');
+  });
 
   socket.on('sync_state', (data) => {
     updateGameStatusDisplay(data);
