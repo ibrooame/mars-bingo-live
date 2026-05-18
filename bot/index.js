@@ -10,7 +10,6 @@ async function ensureUser(ctx) {
   try {
     let user = await db.get('SELECT * FROM users WHERE telegram_id = ?', [from.id]);
     if (!user) {
-      // FIXED: Use INSERT OR IGNORE to gracefully handle pre-existing records without crashing
       await db.run(
         `INSERT OR IGNORE INTO users (telegram_id, username, balance, level, streak, created_at) 
          VALUES (?, ?, 0.0, 1, 0, strftime('%s', 'now'))`,
@@ -41,7 +40,7 @@ bot.start(async (ctx) => {
       [Markup.button.callback('💳 Deposit Telebirr', 'menu_deposit'), Markup.button.callback('🏧 Withdraw', 'menu_withdraw')],
       [Markup.button.callback('ℹ️ Help Guide', 'menu_help')]
     ])
-  ])
+  );
 });
 
 bot.action('menu_deposit', async (ctx) => {
@@ -70,7 +69,7 @@ bot.command('approve_tx', async (ctx) => {
   if (Number(ctx.from.id) !== Number(process.env.ADMIN_TELEGRAM_ID)) return;
   const args = ctx.message.text.split(' ');
   if (args.length < 2) return ctx.reply('Usage: /approve_tx [TX_ID]');
-  const txId = args;
+  const txId = args[1];
 
   try {
     const tx = await db.get("SELECT * FROM transactions WHERE id = ? AND status = 'pending'", [txId]);
@@ -93,7 +92,7 @@ bot.command('reject_tx', async (ctx) => {
   if (Number(ctx.from.id) !== Number(process.env.ADMIN_TELEGRAM_ID)) return;
   const args = ctx.message.text.split(' ');
   if (args.length < 2) return ctx.reply('Usage: /reject_tx [TX_ID]');
-  const txId = args;
+  const txId = args[1];
 
   try {
     const tx = await db.get("SELECT * FROM transactions WHERE id = ? AND status = 'pending'", [txId]);
