@@ -1,6 +1,6 @@
 {
   "name": "mars-bingo-live",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Production-Grade Telegram Mini App Gambling Platform",
   "main": "server/index.js",
   "scripts": {

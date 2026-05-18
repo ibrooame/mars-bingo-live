@@ -1,8 +1,9 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// Explicitly define your secure proxy target domain to eliminate local resolving mismatches
-const PUBLIC_API_URL = "https://onrender.com";
+// DYNAMIC HANDLING RESOLUTION:
+// Automatically resolve back through the active window frame domain to prevent routing blocks
+const PUBLIC_API_URL = window.location.origin;
 
 let socket = null;
 let currentToken = null;
@@ -42,6 +43,7 @@ async function initAuthenticationPipeline() {
 }
 
 function initializeSocketConnections(token) {
+  // Bind Socket connection straight back into the dynamic host platform origin
   socket = io(PUBLIC_API_URL, { auth: { token } });
 
   socket.on('sync_state', (data) => {
@@ -236,7 +238,6 @@ async function fetchStatementHistory() {
   });
 }
 
-// Window globally scoped function assignation for HTML onClick elements
 window.switchView = switchView;
 
 initAuthenticationPipeline();
