@@ -70,18 +70,17 @@ async function startProductionServer() {
     gameEngine.init(io);
     initSocketServer(io);
 
-    await bot.launch()
-      .then(() => logger.info('Telegram Bot Client integration active and online.'))
-      .catch((e) => console.error('Bot launch error (non-blocking for port binding):', e.message));
-
-    // ABSOLUTE BINDING RESOLUTION:
-    // Force port 10000 fallback to satisfy Render's port checker automatically
+    // FIXED: Bind HTTP server FIRST so Render's port scan passes instantly
     const PORT = process.env.PORT || 10000;
-    
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`\n====================================================`);
       console.log(`🚀 MARS BINGO LIVE SERVER RUNNING ON PORT ${PORT}`);
       console.log(`====================================================\n`);
+      
+      // FIXED: Launch the bot loop *after* the port is open so it doesn't block startup
+      bot.launch()
+        .then(() => logger.info('Telegram Bot Client integration active and online.'))
+        .catch((e) => console.error('Bot launch error:', e.message));
     });
 
   } catch (err) {
