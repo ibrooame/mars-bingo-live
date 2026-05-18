@@ -70,14 +70,14 @@ async function startProductionServer() {
     gameEngine.init(io);
     initSocketServer(io);
 
-    // Dynamic error handling to keep server port alive if bot tracking fails
     await bot.launch()
       .then(() => logger.info('Telegram Bot Client integration active and online.'))
       .catch((e) => console.error('Bot launch error (non-blocking for port binding):', e.message));
 
-    // STRICTOR PORT BINDING RULE
-    // Explicitly target host '0.0.0.0' to pass Render's port scan validator checks
+    // ABSOLUTE BINDING RESOLUTION:
+    // Force port 10000 fallback to satisfy Render's port checker automatically
     const PORT = process.env.PORT || 10000;
+    
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`\n====================================================`);
       console.log(`🚀 MARS BINGO LIVE SERVER RUNNING ON PORT ${PORT}`);
@@ -86,7 +86,7 @@ async function startProductionServer() {
 
   } catch (err) {
     logger.error('CRITICAL STARTUP ENGINE FAULT:', err);
-    console.error('Server failed to bind or initialize safely:', err.message);
+    console.error('Server failed to bind safely:', err.message);
     process.exit(1);
   }
 }
