@@ -11,13 +11,12 @@ async function init() {
   if (fs.existsSync(dbPath)) {
     const fileBuffer = fs.readFileSync(dbPath);
     db = new SQL.Database(fileBuffer);
-    console.log('Loaded existing SQLite database.');
+    console.log('Loaded existing SQLite database configuration file.');
   } else {
     db = new SQL.Database();
-    console.log('Created a fresh pure-JS database instance.');
+    console.log('Created a fresh pure-JS database instance inside cloud memory.');
   }
 
-  // Execute structural table matrix setup queries
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       telegram_id INTEGER PRIMARY KEY,
@@ -78,12 +77,17 @@ async function init() {
     );
   `);
 
-  // Force compilation write down back to local file storage
   const data = db.export();
   const buffer = Buffer.from(data);
   fs.writeFileSync(dbPath, buffer);
 
-  console.log('Database schemas and structures initialized successfully (Pure JS Engine).');
+  console.log('✅ Database schemas and structures initialized completely.');
+  return true;
 }
 
-init().catch(console.error);
+// Auto-run if executed directly via command line loops
+if (require.main === module) {
+  init().catch(console.error);
+}
+
+module.exports = init;
