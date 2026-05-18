@@ -1,0 +1,25 @@
+{
+  "name": "mars-bingo-live",
+  "version": "1.0.0",
+  "description": "Production-Grade Telegram Mini App Gambling Platform",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "init-db": "node database/init.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.2.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.7.5",
+    "sql.js": "^1.10.3",
+    "telegraf": "^4.16.3",
+    "winston": "^3.13.0"
+  },
+  "private": true
+}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mars Bingo Live</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://telegram.org"></script>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <header>
+      <div class="profile-summary">
+        <h2 id="player-username">Loading...</h2>
+        <small id="player-tier">Level 1</small>
+      </div>
+      <div class="wallet-badge" id="player-balance">0.00 ETB</div>
+    </header>
+
+    <!-- VIEW 1: GAMEPLAY LOBBY & BOARD -->
+    <div id="view-lobby" class="view-panel active">
+      <div class="game-status-board">
+        <h3 id="timer-label">Game Status</h3>
+        <div id="ball-box">
+          <div class="ball-display" id="active-ball">--</div>
+        </div>
+        <p id="game-round-info">Connecting to server matrix...</p>
+      </div>
+
+      <button id="btn-buy-ticket" class="btn-primary" style="margin-bottom: 10px;">🎟️ Buy Bingo Ticket (50 ETB)</button>
+
+      <div class="bingo-grid" id="bingo-card-grid">
+        <!-- Generated dynamically via JS -->
+      </div>
+
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-stream"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-msg-input" placeholder="Type inside game lobby chat...">
+          <button id="btn-send-chat">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: CASHIER WALLET GATEWAY -->
+    <div id="view-wallet" class="view-panel">
+      <h2 style="margin-bottom:15px; color:var(--accent-gold);">💳 Telebirr Gateway</h2>
+      <div style="background:#161b22; padding:12px; border-radius:6px; margin-bottom:15px; font-size:13px;">
+        <p>Official Telebirr Number:</p>
+        <strong style="font-size:16px; color:#fff; display:block; margin:5px 0;">0949950293</strong>
+        <span style="color:var(--text-gray);">Manually transfer funds first, then register the reference below.</span>
+      </div>
+
+      <div class="form-group">
+        <label>Transfer Amount (ETB)</label>
+        <input type="number" id="deposit-amount" placeholder="e.g. 100">
+      </div>
+      <div class="form-group">
+        <label>10-Digit Transaction ID</label>
+        <input type="text" id="deposit-txid" placeholder="e.g. A1B2C3D4E5">
+      </div>
+      <button id="btn-submit-deposit" class="btn-primary" style="margin-bottom:20px;">Submit Proof of Deposit</button>
+
+      <hr style="border:0; border-top:1px solid #30363d; margin:15px 0;">
+
+      <h3 style="margin-bottom:10px;">🏧 Request Withdrawal</h3>
+      <div class="form-group">
+        <label>Withdrawal Amount (ETB)</label>
+        <input type="number" id="withdraw-amount" placeholder="Min 50 ETB">
+      </div>
+      <button id="btn-submit-withdrawal" class="btn-primary" style="background:var(--accent-red); color:white;">Request Payout</button>
+    </div>
+
+    <!-- VIEW 3: STATEMENT HISTORY LOGS -->
+    <div id="view-history" class="view-panel">
+      <h2 style="margin-bottom:15px; color:var(--accent-gold);">📊 Statement History</h2>
+      <div id="history-log-list">
+        <!-- Rendered dynamically via JS -->
+      </div>
+    </div>
+
+    <!-- MAIN CONTROL BOTTOM NAVIGATION TOOLBAR -->
+    <nav class="bottom-nav">
+      <div class="nav-item active" id="nav-lobby" onclick="switchView('lobby')">🎮 Play Game</div>
+      <div class="nav-item" id="nav-wallet" onclick="switchView('wallet')">💳 Cashier</div>
+      <div class="nav-item" id="nav-history" onclick="switchView('history')">📊 History</div>
+    </nav>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
