@@ -6,8 +6,40 @@ const PUBLIC_API_URL = window.location.origin;
 let socket = null;
 let currentToken = null;
 let activeBingoCard = null;
+let isAutomaticMode = true;
+
+// Build the authoritative 75-number left board grid layout panel on load
+function buildMasterBoardLayout() {
+  const lanes = {
+    'B': { start: 1, end: 15, target: document.getElementById('lane-B') },
+    'I': { start: 16, end: 30, target: document.getElementById('lane-I') },
+    'N': { start: 31, end: 45, target: document.getElementById('lane-N') },
+    'G': { start: 46, end: 60, target: document.getElementById('lane-G') },
+    'O': { start: 61, end: 75, target: document.getElementById('lane-O') }
+  };
+
+  for (const letter in lanes) {
+    const lane = lanes[letter];
+    if (!lane.target) continue;
+    lane.target.innerHTML = '';
+    for (let i = lane.start; i <= lane.end; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'board-cell';
+      cell.id = `master-cell-${i}`;
+      cell.innerText = i;
+      lane.target.appendChild(cell);
+    }
+  }
+}
+
+function clearMasterBoardHighlights() {
+  document.querySelectorAll('.board-cell').forEach(c => c.classList.remove('called'));
+  const historyBar = document.getElementById('drawn-balls-history');
+  if (historyBar) historyBar.innerHTML = '';
+}
 
 async function initAuthenticationPipeline() {
+  buildMasterBoardLayout();
   const initData = tg.initData;
   
   try {
@@ -36,21 +68,15 @@ async function initAuthenticationPipeline() {
     }
   } catch (err) {
     console.error("Auth routing failure:", err);
-    document.getElementById('game-round-info').innerText = "API Connection Gateway Offline.";
+    document.getElementById('game-round-info').innerText = "API Gateway Offline.";
   }
 }
 
 function initializeSocketConnections(token) {
-  // FORCE SECURE SECURE HTTPS / WSS TRANSPORTS FOR RENDER LOAD BALANCERS
   socket = io(PUBLIC_API_URL, {
     auth: { token },
     transports: ['websocket', 'polling'],
-    secure: true,
-    rejectUnauthorized: false
-  });
-
-  socket.on('connect', () => {
-    console.log('✅ Connected securely to server matrix socket pool!');
+    secure: true
   });
 
   socket.on('sync_state', (data) => {
@@ -58,31 +84,59 @@ function initializeSocketConnections(token) {
   });
 
   socket.on('game_countdown', (data) => {
-    const timerLabel = document.getElementById('timer-label');
-    if (timerLabel) timerLabel.innerText = `NEXT ROUND COUNTDOWN`;
-    
-    const activeBall = document.getElementById('active-ball');
-    if (activeBall) activeBall.innerText = data.countdown;
-    
-    const roundInfo = document.getElementById('game-round-info');
-    if (roundInfo) roundInfo.innerText = `Registering Entries for Round #${data.roundId}`;
+    document.getElementById('timer-label').innerText = `NEXT ROUND COUNTDOWN`;
+    document.getElementById('active-ball').innerText = data.countdown;
+    document.getElementById('game-round-info').innerText = `Registering entries for Round #${data.roundId}`;
+    document.getElementById('game-balls-called').innerText = '0';
+    document.getElementById('game-id-val').innerText = `R-${data.roundId}`;
+    clearMasterBoardHighlights();
   });
 
   socket.on('game_state_change', (data) => {
     if (data.state === 'drawing') {
-      document.getElementById('timer-label').innerText = `DRAWING NUMBERS`;
+      document.getElementById('timer-label').innerText = `DRAWING BALLS`;
       document.getElementById('btn-buy-ticket').style.display = 'none';
     }
   });
 
   socket.on('number_drawn', (data) => {
-    document.getElementById('active-ball').innerText = data.ball;
-    document.getElementById('game-round-info').innerText = `Drawn Numbers: ${data.history.length}`;
-    highlightMatchingMatrixCells(data.ball);
+    const ball = data.ball;
+    let letter = 'B';
+    if (ball >= 16 && ball <= 30) letter = 'I';
+    else if (ball >= 31 && ball <= 45) letter = 'N';
+    else if (ball >= 46 && ball <= 60) letter = 'G';
+    else if (ball >= 61 && ball <= 75) letter = 'O';
+
+    document.getElementById('active-ball').innerText = `${letter}-${ball}`;
+    document.getElementById('timer-label').innerText = `LIVE BROADCAST`;
+    document.getElementById('game-balls-called').innerText = data.history.length;
+
+    // Highlight left tracking board cell
+    const masterCell = document.getElementById(`master-cell-${ball}`);
+    if (masterCell) masterCell.classList.add('called');
+
+    // Slide letter-number ball into history ticker bar
+    const historyBar = document.getElementById('drawn-balls-history');
+    if (historyBar) {
+      const miniBall = document.createElement('div');
+      miniBall.className = 'history-ball-mini';
+      miniBall.innerText = `${letter}-${ball}`;
+      
+      // Match color theme based on category ranges
+      if (letter === 'B') miniBall.style.background = '#0288d1';
+      else if (letter === 'I') miniBall.style.background = '#512da8';
+      else if (letter === 'N') miniBall.style.background = '#c2185b';
+      else if (letter === 'G') miniBall.style.background = '#388e3c';
+      else miniBall.style.background = '#f57c00';
+
+      historyBar.insertBefore(miniBall, historyBar.firstChild);
+    }
+
+    highlightMatchingMatrixCells(ball);
   });
 
   socket.on('game_over', (data) => {
-    document.getElementById('timer-label').innerText = `ROUND COMPLETED`;
+    document.getElementById('timer-label').innerText = `ROUND ENDED`;
     document.getElementById('active-ball').innerText = "🏁";
     if (data.winnerId) {
       document.getElementById('game-round-info').innerText = `Winner: ${data.winnerUsername} 🎉 Pool: ${data.prize} ETB`;
@@ -90,26 +144,18 @@ function initializeSocketConnections(token) {
       document.getElementById('game-round-info').innerText = "Round finished with no winners.";
     }
     setTimeout(() => {
-      document.getElementById('bingo-card-grid').innerHTML = '';
+      document.getElementById('cartela-subview-card').style.display = 'none';
       document.getElementById('btn-buy-ticket').style.display = 'block';
       activeBingoCard = null;
       syncBalanceTelemetry();
-    }, 5000);
-  });
-
-  socket.on('msg_broadcast', (data) => {
-    const stream = document.getElementById('chat-stream');
-    const row = document.createElement('div');
-    row.className = "chat-row";
-    row.innerHTML = `<span class="chat-user">${data.username}:</span> ${data.message}`;
-    stream.appendChild(row);
-    stream.scrollTop = stream.scrollHeight;
+      clearMasterBoardHighlights();
+    }, 6000);
   });
 }
 
 function updateGameStatusDisplay(data) {
   if (data.state === 'waiting') {
-    document.getElementById('timer-label').innerText = `AWAITING PLAYERS`;
+    document.getElementById('timer-label').innerText = `AWAITING TICKETS`;
     document.getElementById('active-ball').innerText = data.countdown;
   } else if (data.state === 'drawing') {
     document.getElementById('timer-label').innerText = `LIVE BALL ENGINE`;
@@ -124,9 +170,11 @@ document.getElementById('btn-buy-ticket').addEventListener('click', () => {
       activeBingoCard = res.card;
       renderBingoMatrixGrid(res.card);
       document.getElementById('btn-buy-ticket').style.display = 'none';
+      document.getElementById('cartela-subview-card').style.display = 'block';
+      document.getElementById('cartela-serial-id').innerText = `CARTELA #${Math.floor(Math.random() * 900) + 100}`;
       syncBalanceTelemetry();
     } else {
-      alert(res.error || "Failed to purchase entry ticket.");
+      alert(res.error || "Failed to buy entry ticket.");
     }
   });
 });
@@ -141,7 +189,7 @@ function renderBingoMatrixGrid(matrix) {
       cell.className = "bingo-cell";
       if (val === 0) {
         cell.className += " free-space marked";
-        cell.innerText = "FREE";
+        cell.innerText = "★";
       } else {
         cell.innerText = val;
         cell.setAttribute('data-num', val);
@@ -156,11 +204,10 @@ function highlightMatchingMatrixCells(number) {
   cells.forEach(c => c.classList.add('marked'));
 }
 
-document.getElementById('btn-send-chat').addEventListener('click', () => {
-  const input = document.getElementById('chat-msg-input');
-  if (!input.value.trim() || !socket) return;
-  socket.emit('send_msg', { message: input.value.trim() });
-  input.value = '';
+document.getElementById('btn-auto-toggle').addEventListener('click', () => {
+  isAutomaticMode = !isAutomaticMode;
+  document.getElementById('btn-auto-toggle').style.background = isAutomaticMode ? '#06d6a0' : '#4b5563';
+  document.getElementById('btn-auto-toggle').style.color = isAutomaticMode ? '#000' : '#fff';
 });
 
 function switchView(target) {
@@ -184,67 +231,5 @@ async function syncBalanceTelemetry() {
   }
 }
 
-document.getElementById('btn-submit-deposit').addEventListener('click', async () => {
-  const amount = document.getElementById('deposit-amount').value;
-  const txid = document.getElementById('deposit-txid').value;
-  if (!amount || !txid) return alert("Please fill out all fields.");
-
-  const res = await fetch(`${PUBLIC_API_URL}/api/wallet/deposit`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${currentToken}`
-    },
-    body: JSON.stringify({ amount, transaction_id: txid })
-  });
-  const data = await res.json();
-  alert(data.message || data.error);
-});
-
-document.getElementById('btn-submit-withdrawal').addEventListener('click', async () => {
-  const amount = document.getElementById('withdraw-amount').value;
-  if (!amount) return alert("Specify withdrawal amount.");
-
-  const res = await fetch(`${PUBLIC_API_URL}/api/wallet/withdraw`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${currentToken}`
-    },
-    body: JSON.stringify({ amount })
-  });
-  const data = await res.json();
-  alert(data.message || data.error);
-  syncBalanceTelemetry();
-});
-
-async function fetchStatementHistory() {
-  const target = document.getElementById('history-log-list');
-  target.innerHTML = '<p style="padding:15px; color:var(--text-gray);">Querying ledger profiles...</p>';
-
-  const res = await fetch(`${PUBLIC_API_URL}/api/wallet/history`, {
-    headers: { 'Authorization': `Bearer ${currentToken}` }
-  });
-  const list = await res.json();
-  target.innerHTML = '';
-
-  list.forEach(item => {
-    const row = document.createElement('div');
-    row.style.background = "#161b22";
-    row.style.padding = "10px";
-    row.style.borderRadius = "6px";
-    row.style.marginBottom = "8px";
-    row.innerHTML = `
-      <div style="display:flex; justify-content:space-between;">
-        <strong>${item.type.toUpperCase()}</strong>
-        <span style="color:${item.status === 'approved' ? '#238636' : '#ff4757'}">${item.status}</span>
-      </div>
-      <small style="color:var(--text-gray); display:block; margin-top:4px;">Sum: ${item.amount} ETB</small>
-    `;
-    target.appendChild(row);
-  });
-}
-
 window.switchView = switchView;
-
 initAuthenticationPipeline();

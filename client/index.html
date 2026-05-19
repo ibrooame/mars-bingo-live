@@ -3,44 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mars Bingo Live</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Mars Bingo Live Arena</title>
+  <link rel="stylesheet" href="css/style.css?v=1.0.8">
   <script src="https://telegram.org"></script>
   <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
 
   <div class="app-container">
+    
+    <!-- HIGH-DENSITY TOP METRICS OVERLAY PROFILE BANNER -->
     <header>
       <div class="profile-summary">
-        <h2 id="player-username">Loading...</h2>
+        <h2 id="player-username">@Player</h2>
         <small id="player-tier">Level 1</small>
       </div>
       <div class="wallet-badge" id="player-balance">0.00 ETB</div>
     </header>
 
-    <!-- VIEW 1: GAMEPLAY LOBBY & BOARD -->
+    <!-- VIEW 1: ADVANCED MULTIPLAYER CASINO GAMING FIELD -->
     <div id="view-lobby" class="view-panel active">
-      <div class="game-status-board">
-        <h3 id="timer-label">Game Status</h3>
-        <div id="ball-box">
-          <div class="ball-display" id="active-ball">--</div>
-        </div>
-        <p id="game-round-info">Connecting to server matrix...</p>
+      
+      <!-- HORIZONTAL LIVE TOURNEY STATS HEADER -->
+      <div class="stats-ticker-row">
+        <div class="ticker-box">⚔️ ID<span id="game-id-val">DB1IU6</span></div>
+        <div class="ticker-box">👥 Players<span id="game-players-count">1</span></div>
+        <div class="ticker-box">🎟️ Bet<span>50</span></div>
+        <div class="ticker-box" style="color:var(--accent-gold);">💰 Derash<span id="game-prize-pool">0</span></div>
+        <div class="ticker-box">🔮 Called<span id="game-balls-called">0</span></div>
       </div>
 
-      <button id="btn-buy-ticket" class="btn-primary" style="margin-bottom: 10px;">🎟️ Buy Bingo Ticket (50 ETB)</button>
+      <!-- MAIN ARENA SPLIT SCREEN CONTAINER VIEW -->
+      <div class="arena-split-workspace">
+        
+        <!-- LEFT WALL: Authoritative 75-Ball Master Grid Tracking Panel -->
+        <div class="master-board-column">
+          <div class="letter-track-lane" data-letter="B"><h3>B</h3><div class="lane-cells" id="lane-B"></div></div>
+          <div class="letter-track-lane" data-letter="I"><h3>I</h3><div class="lane-cells" id="lane-I"></div></div>
+          <div class="letter-track-lane" data-letter="N"><h3>N</h3><div class="lane-cells" id="lane-N"></div></div>
+          <div class="letter-track-lane" data-letter="G"><h3>G</h3><div class="lane-cells" id="lane-G"></div></div>
+          <div class="letter-track-lane" data-letter="O"><h3>O</h3><div class="lane-cells" id="lane-O"></div></div>
+        </div>
 
-      <div class="bingo-grid" id="bingo-card-grid">
-        <!-- Generated dynamically via JS -->
+        <!-- RIGHT WALL: Dynamic Target Active Dashboard Control Matrix -->
+        <div class="live-action-column">
+          
+          <!-- RECENT BALLS COMPACT HISTORY TRACKER BAR -->
+          <div class="balls-history-bar" id="drawn-balls-history">
+            <!-- Dynamic elements will slide in here -->
+          </div>
+
+          <!-- THE GIANT LIVE ENGINE ACTIVE BALL BROADCASTER SCREEN -->
+          <div class="giant-ball-screen">
+            <h3 id="timer-label">AWAITING SYSTEM START</h3>
+            <div class="master-ball-radial" id="active-ball">--</div>
+            <p id="game-round-info">Buy a card ticket below to join the next live game round...</p>
+          </div>
+
+          <!-- DYNAMIC CONDITIONAL CASINO CARD HOLDER ELEMENT MATRIX Slot -->
+          <div class="ticket-workspace-holder">
+            <button id="btn-buy-ticket" class="btn-primary">🎟️ PURCHASE ENTRY TICKET (50 ETB)</button>
+            
+            <div class="cartela-wrapper" id="cartela-subview-card" style="display:none;">
+              <div class="cartela-header-banner">
+                <span>B</span><span>I</span><span>N</span><span>G</span><span>O</span>
+              </div>
+              <div class="bingo-grid" id="bingo-card-grid"></div>
+              <div class="cartela-footer-label" id="cartela-serial-id">CARTELA #86</div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-      <div class="chat-container">
-        <div class="chat-messages" id="chat-stream"></div>
-        <div class="chat-input-row">
-          <input type="text" id="chat-msg-input" placeholder="Type inside game lobby chat...">
-          <button id="btn-send-chat">Send</button>
-        </div>
+      <!-- ACTION CONTROL BOTTOM NAVIGATION FOOTER ROW -->
+      <div class="arena-action-footer">
+        <button class="footer-btn btn-leave" onclick="window.close()">LEAVE</button>
+        <button class="footer-btn btn-refresh" onclick="window.location.reload()">REFRESH</button>
+        <button class="footer-btn btn-auto" id="btn-auto-toggle">AUTOMATIC</button>
       </div>
     </div>
 
@@ -52,44 +92,29 @@
         <strong style="font-size:16px; color:#fff; display:block; margin:5px 0;">0949950293</strong>
         <span style="color:var(--text-gray);">Manually transfer funds first, then register the reference below.</span>
       </div>
-
-      <div class="form-group">
-        <label>Transfer Amount (ETB)</label>
-        <input type="number" id="deposit-amount" placeholder="e.g. 100">
-      </div>
-      <div class="form-group">
-        <label>10-Digit Transaction ID</label>
-        <input type="text" id="deposit-txid" placeholder="e.g. A1B2C3D4E5">
-      </div>
+      <div class="form-group"><label>Transfer Amount (ETB)</label><input type="number" id="deposit-amount" placeholder="e.g. 100"></div>
+      <div class="form-group"><label>10-Digit Transaction ID</label><input type="text" id="deposit-txid" placeholder="e.g. A1B2C3D4E5"></div>
       <button id="btn-submit-deposit" class="btn-primary" style="margin-bottom:20px;">Submit Proof of Deposit</button>
-
       <hr style="border:0; border-top:1px solid #30363d; margin:15px 0;">
-
       <h3 style="margin-bottom:10px;">🏧 Request Withdrawal</h3>
-      <div class="form-group">
-        <label>Withdrawal Amount (ETB)</label>
-        <input type="number" id="withdraw-amount" placeholder="Min 50 ETB">
-      </div>
+      <div class="form-group"><label>Withdrawal Amount (ETB)</label><input type="number" id="withdraw-amount" placeholder="Min 50 ETB"></div>
       <button id="btn-submit-withdrawal" class="btn-primary" style="background:var(--accent-red); color:white;">Request Payout</button>
     </div>
 
     <!-- VIEW 3: STATEMENT HISTORY LOGS -->
     <div id="view-history" class="view-panel">
       <h2 style="margin-bottom:15px; color:var(--accent-gold);">📊 Statement History</h2>
-      <div id="history-log-list">
-        <!-- Rendered dynamically via JS -->
-      </div>
+      <div id="history-log-list"></div>
     </div>
 
-    <!-- MAIN CONTROL BOTTOM NAVIGATION TOOLBAR -->
+    <!-- MAIN APP NAVIGATION BAR FOOTER PANEL -->
     <nav class="bottom-nav">
       <div class="nav-item active" id="nav-lobby" onclick="switchView('lobby')">🎮 Play Game</div>
-      <div class="nav-item" id="nav-wallet" onclick="switchView('wallet')">💳 Cashier</div>
-      <div class="nav-item" id="nav-history" onclick="switchView('history')">📊 History</div>
+      <div class="nav-item" id="nav-wallet" onclick="window.switchView('wallet')">💳 Cashier</div>
+      <div class="nav-item" id="nav-history" onclick="window.switchView('history')">📊 History</div>
     </nav>
   </div>
 
-  <!-- FORCE DOWNLOAD OF NEW FILE VIA STRICT RE-VERSIONING TAG -->
-  <script src="js/app.js?v=999"></script>
+  <script src="js/app.js?v=1.0.8"></script>
 </body>
 </html>
